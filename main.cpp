@@ -24,7 +24,7 @@ int main() {
   printf("window height %i\n", height);
 
   GLFWwindow *window =
-      glfwCreateWindow(width, height, "Hello World", NULL, NULL);
+      glfwCreateWindow(width, height, "learn-opengl", NULL, NULL);
   if (!window) {
     glfwTerminate();
     return -1;
