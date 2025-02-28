@@ -52,55 +52,66 @@ int main() {
   glViewport(0, 0, width, height);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-  float points[] = {0.0f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f, -0.5f, -0.5f, 0.0f};
-  //float points[] = {-0.5, 0.5, 0.0f, 0.5f, -0.5, 0.0f, 0.5, -0.5, 0.0f, -0.5f, -0.5f, 0.0f};
+  float triangle[] = {0.0f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f, -0.5f, -0.5f, 0.0f};
 
-  unsigned int vbo = 0; // vertex buffer object
-  glGenBuffers(1, &vbo);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(points) * sizeof(float), points, GL_STATIC_DRAW);
+  float square[] = {-0.5f, 0.5f,  0.0f, 0.5f,  0.5f,  0.0f,
+                    0.5f,  -0.5f, 0.0f, -0.5f, -0.5f, 0.0f};
 
-  unsigned int vao = 0; // vertex array object
-  glGenVertexArrays(1, &vao);
-  glBindVertexArray(vao);
+  unsigned int vao1, vbo1;
+
+  glGenVertexArrays(1, &vao1);
+  glGenBuffers(1, &vbo1);
+
+  glBindVertexArray(vao1);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo1);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(triangle), triangle, GL_STATIC_DRAW);
   glEnableVertexAttribArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
+  glBindVertexArray(0);
+
+  unsigned int vao2, vbo2;
+  glGenVertexArrays(1, &vao2);
+  glGenBuffers(1, &vbo2);
+
+  glBindVertexArray(vao2);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo2);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(square), square, GL_STATIC_DRAW);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
+  glBindVertexArray(0);
 
   unsigned int vs = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(vs, 1, &vertex_shader, NULL);
   glCompileShader(vs);
+
   unsigned int fs = glCreateShader(GL_FRAGMENT_SHADER);
   glShaderSource(fs, 1, &fragment_shader, NULL);
   glCompileShader(fs);
 
   unsigned int shader_program = glCreateProgram();
-  glAttachShader(shader_program, fs);
   glAttachShader(shader_program, vs);
+  glAttachShader(shader_program, fs);
   glLinkProgram(shader_program);
 
-  glfwSetKeyCallback(window, key_callback);
+  glDeleteShader(vs);
+  glDeleteShader(fs);
 
-  // Main loop
   while (!glfwWindowShouldClose(window)) {
-    // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     process_input(window);
-
-    // Put the shader program, and the VAO, in focus in OpenGL's state machine.
     glUseProgram(shader_program);
-    glBindVertexArray(vao);
 
-    // Draw points 0-3 from the currently bound VAO with current in-use shader.
+    // Render Triangle
+    glBindVertexArray(vao1);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
-    // Swap front and back buffers
-    glfwSwapBuffers(window);
+    // Render Square
+    glBindVertexArray(vao2);
+    glDrawArrays(GL_LINE_LOOP, 0, 4); // Use GL_TRIANGLE_FAN for filled square
 
-    // Poll for and process events
+    glfwSwapBuffers(window);
     glfwPollEvents();
   }
-
   glfwTerminate();
   return 0;
 }
