@@ -89,11 +89,14 @@ int main() {
   glBindVertexArray(0);
 
   Shader ourShader("vertex.glsl", "fragment.glsl");
+  float offset = 0.5f;
+  ourShader.setFloat("xOffset", offset);
 
   while (!glfwWindowShouldClose(window)) {
     glClear(GL_COLOR_BUFFER_BIT);
     process_input(window);
     ourShader.use();
+    ourShader.setFloat("xOffset", offset);
 
     // render triangle
     glBindVertexArray(vao1);
