@@ -1,8 +1,13 @@
-#include <cmath>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
+#include <cmath>
 #include <cstdio>
 #include <iostream>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb/stb_image.h"
+
 #include "shader_s.h"
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
@@ -37,14 +42,14 @@ int main() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  int width = 800;
-  int height = 600;
+  int window_width = 800;
+  int window_height = 600;
 
-  printf("window width %i\n", width);
-  printf("window height %i\n", height);
+  printf("window width %i\n", window_width);
+  printf("window height %i\n", window_height);
 
   GLFWwindow *window =
-      glfwCreateWindow(width, height, "learn-opengl", NULL, NULL);
+      glfwCreateWindow(window_width, window_height, "learn-opengl", NULL, NULL);
   if (!window) {
     glfwTerminate();
     return -1;
@@ -56,7 +61,7 @@ int main() {
     return -1;
   }
 
-  glViewport(0, 0, width, height);
+  glViewport(0, 0, window_width, window_height);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
   //float triangle[] = {0.0f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f, -0.5f, -0.5f, 0.0f};
@@ -71,6 +76,30 @@ int main() {
     -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
      0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top
   }; // idk why the opengl tutorial put color inside vertices array and no is a other array
+
+  float texCoords[] = {
+      0.0f, 0.0f,
+      1.0f, 0.0f,
+      0.5f, 1.0f
+  };
+
+  // texture config
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
+  float borderColor[] = { 1.0f, 1.0f, 0.0f, 1.0f };
+  glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+
+  int width, height, nrChannels;
+  unsigned char *data = stbi_load("container.jpg", &width, &height, &nrChannels, 0); 
+
 
   unsigned int vao1, vbo1;
 
