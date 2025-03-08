@@ -17,22 +17,6 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action,
 
 void process_input(GLFWwindow *window);
 
-//const char *vertex_shader = "#version 330 core\n"
-                            //"layout (location = 0) in vec3 a_pos;"
-                            //"layout (location = 1) in vec3 a_color;"
-                            //"out vec3 our_color;"
-                            //"void main() {"
-                            //"  gl_Position = vec4(a_pos, 1.0);"
-                            //"  our_color = a_color;"
-                            //"}";
-
-//const char *fragment_shader = "#version 330 core\n"
-                              //"out vec4 frag_colour;"
-                              //"in vec3 our_color;"
-                              //"void main() {"
-                              //"  frag_colour = vec4(our_color, 1.0);"
-                              //"}";
-
 int main() {
   if (!glfwInit()) {
     return -1;
@@ -64,23 +48,18 @@ int main() {
   glViewport(0, 0, window_width, window_height);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-  //float triangle[] = {0.0f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f, -0.5f, -0.5f, 0.0f};
+  float vertices[] = {
+      // positions          // colors           // texture coords
+       0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+       0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+      -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+      -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
+  };
 
-  //float square[] = {-0.5f, 0.5f,  0.0f, 0.5f,  0.5f,  0.0f,
-                    //0.5f,  -0.5f, 0.0f, -0.5f, -0.5f, 0.0f};
-
-
-  float triangle[] = {
-    // positions         // colors
-     0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
-    -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
-     0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top
-  }; // idk why the opengl tutorial put color inside vertices array and no is a other array
-
-  float texCoords[] = {
-      0.0f, 0.0f,
-      1.0f, 0.0f,
-      0.5f, 1.0f
+  // Define indices for the square (two triangles)
+  unsigned int indices[] = {
+      0, 1, 3,  // first triangle (top-right, bottom-right, top-left)
+      1, 2, 3   // second triangle (bottom-right, bottom-left, top-left)
   };
 
   // texture config
@@ -96,25 +75,53 @@ int main() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-
   int width, height, nrChannels;
-  unsigned char *data = stbi_load("container.jpg", &width, &height, &nrChannels, 0); 
+  unsigned char *data = stbi_load("./container.jpg", &width, &height, &nrChannels, 0); 
 
+  unsigned int texture;
+  glGenTextures(1, &texture);
 
-  unsigned int vao1, vbo1;
+  glBindTexture(GL_TEXTURE_2D, texture);
 
-  glGenVertexArrays(1, &vao1);
-  glGenBuffers(1, &vbo1);
+  if (data) {
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+  } else {
+    std::cout << "Failed to load texture" << std::endl;
+  }
 
-  glBindVertexArray(vao1);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo1);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(triangle), triangle, GL_STATIC_DRAW);
-  // position attribute
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+  stbi_image_free(data);
+
+  unsigned int vao, vbo, ebo;
+
+  glGenVertexArrays(1, &vao);
+  glGenBuffers(1, &vbo);
+  glGenBuffers(1, &ebo);
+
+  // Bind the VAO first, then bind and set VBO(s) and EBO, and configure vertex attributes
+  glBindVertexArray(vao);
+  
+  // Bind VBO and load vertex data
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  
+  // Bind EBO and load index data
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+  
+  // position attribute (3 floats)
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
-  // color attribute
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3* sizeof(float)));
+  
+  // color attribute (3 floats)
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
+  
+  // texture attribute (2 floats)
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+  glEnableVertexAttribArray(2);
+
+  // Unbind the VAO
   glBindVertexArray(0);
 
   Shader ourShader("vertex.glsl", "fragment.glsl");
@@ -122,19 +129,29 @@ int main() {
   while (!glfwWindowShouldClose(window)) {
     glClear(GL_COLOR_BUFFER_BIT);
     process_input(window);
+    
+    // Activate shader
     ourShader.use();
-
-    // render triangle
-    glBindVertexArray(vao1);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    // render square
-    //glBindVertexArray(vao2);
-    //glDrawArrays(GL_LINE_LOOP, 0, 4); // Use GL_TRIANGLE_FAN for filled square
+    
+    // Bind texture
+    glBindTexture(GL_TEXTURE_2D, texture);
+    
+    // Bind VAO and draw using indices
+    glBindVertexArray(vao);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    
+    // Unbind VAO
+    glBindVertexArray(0);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
+
+  // Cleanup
+  glDeleteVertexArrays(1, &vao);
+  glDeleteBuffers(1, &vbo);
+  glDeleteBuffers(1, &ebo);
+  
   glfwTerminate();
   return 0;
 }
