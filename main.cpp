@@ -77,8 +77,9 @@ int main() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
   int width, height, nrChannels;
-  stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-  
+  stbi_set_flip_vertically_on_load(
+      true); // tell stb_image.h to flip loaded texture's on the y-axis.
+
   unsigned char *data =
       stbi_load("./container.jpg", &width, &height, &nrChannels, 0);
 
@@ -179,8 +180,6 @@ int main() {
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture2);
 
-    // render container
-    ourShader.use();
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
