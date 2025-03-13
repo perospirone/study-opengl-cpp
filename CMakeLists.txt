@@ -23,6 +23,7 @@ include_directories(include)
 find_package(glfw3 REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(glm REQUIRED)
 
 configure_file(${CMAKE_SOURCE_DIR}/vertex.glsl ${CMAKE_BINARY_DIR}/vertex.glsl COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/fragment.glsl ${CMAKE_BINARY_DIR}/fragment.glsl COPYONLY)
@@ -34,4 +35,4 @@ file(COPY ${IMAGE_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 add_executable(main main.cpp src/glad.c shader_s.h)
 
 # Link libraries
-target_link_libraries(main glfw GLEW::GLEW OpenGL::GL)
+target_link_libraries(main glfw GLEW::GLEW OpenGL::GL glm::glm)
