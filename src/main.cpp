@@ -224,16 +224,14 @@ int main() {
     double currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
-    //printf("delta: %f, last: %f\n", deltaTime, lastFrame);
 
-    // glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, 0.1f, 100.0f); idk what is this?
+    int screen_width, screen_height;
+    glfwGetWindowSize(window, &width, &height);
+    printf("window size width: %d, height: %d\n", width, height);
 
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f); // zoom, aspect ratio TODO: test what happens if i change some arguments here
-
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)width/height, 0.1f, 100.0f); // zoom, aspect ratio TODO: test what happens if i change some arguments here
     glm::mat4 model = glm::mat4(1.0f);
-
-    glm::mat4 view;
-    view = camera.GetViewMatrix();
+    glm::mat4 view = camera.GetViewMatrix();
 
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
@@ -447,6 +445,9 @@ void renderImGui(GLFWwindow* window) {
     // Camera position
     ImGui::Text("Camera: (%.1f, %.1f, %.1f)",
         camera.Position.x, camera.Position.y, camera.Position.z);
+
+    //ImGui::Text("GPU memory usage: ");
+
 
     ImGui::End();
 

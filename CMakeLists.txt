@@ -23,7 +23,6 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/third_party)
 
 # Find required packages (GLFW, GLEW, OpenGL)
 find_package(glfw3 REQUIRED)
-find_package(GLEW REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
 
