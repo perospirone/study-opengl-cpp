@@ -1,31 +1,28 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp> // For glm::value_ptr
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb/stb_image.h"
 
 #include <cmath>
 #include <cstdio>
 #include <iostream>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb/stb_image.h"
-
 #include "shader_s.h"
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-
-void key_callback(GLFWwindow *window, int key, int scancode, int action,
-                  int mods);
-
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 void process_input(GLFWwindow *window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
-
-//settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+// settings
+const unsigned int SCR_WIDTH = 1920;
+const unsigned int SCR_HEIGHT = 1080;
 
 glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -52,13 +49,7 @@ int main() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  //int window_width = 800;
-  //int window_height = 600;
-
-  //printf("window width %i\n", window_width);
-  //printf("window height %i\n", window_height);
-
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+  GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
   if (!window) {
     glfwTerminate();
     return -1;
@@ -141,10 +132,9 @@ int main() {
       stbi_load("./container.jpg", &width, &height, &nrChannels, 0);
 
   unsigned int texture1, texture2;
+
   glGenTextures(1, &texture1);
-
   glBindTexture(GL_TEXTURE_2D, texture1);
-
   if (data) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
                  GL_UNSIGNED_BYTE, data);
@@ -152,7 +142,6 @@ int main() {
   } else {
     std::cout << "Failed to load texture1" << std::endl;
   }
-
   stbi_image_free(data);
 
   glGenTextures(1, &texture2);
@@ -217,22 +206,22 @@ int main() {
   ourShader.setInt("texture2", 1);
 
   glm::vec3 cubePositions[] = {
-      glm::vec3( 0.0f,  0.0f,  0.0f), 
-      glm::vec3( 2.0f,  5.0f, -15.0f), 
-      glm::vec3(-1.5f, -2.2f, -2.5f),  
-      glm::vec3(-3.8f, -2.0f, -12.3f),  
-      glm::vec3( 2.4f, -0.4f, -3.5f),  
-      glm::vec3(-1.7f,  3.0f, -7.5f),  
-      glm::vec3( 1.3f, -2.0f, -2.5f),  
-      glm::vec3( 1.5f,  2.0f, -2.5f), 
-      glm::vec3( 1.5f,  0.2f, -1.5f), 
-      glm::vec3(-1.3f,  1.0f, -1.5f)  
+      glm::vec3( 0.0f,  0.0f,  0.0f),
+      glm::vec3( 2.0f,  5.0f, -15.0f),
+      glm::vec3(-1.5f, -2.2f, -2.5f),
+      glm::vec3(-3.8f, -2.0f, -12.3f),
+      glm::vec3( 2.4f, -0.4f, -3.5f),
+      glm::vec3(-1.7f,  3.0f, -7.5f),
+      glm::vec3( 1.3f, -2.0f, -2.5f),
+      glm::vec3( 1.5f,  2.0f, -2.5f),
+      glm::vec3( 1.5f,  0.2f, -1.5f),
+      glm::vec3(-1.3f,  1.0f, -1.5f)
   };
 
 
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);  
-  glfwSetCursorPosCallback(window, mouse_callback);  
-  glfwSetScrollCallback(window, scroll_callback); 
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwSetCursorPosCallback(window, mouse_callback);
+  glfwSetScrollCallback(window, scroll_callback);
 
   glm::vec3 direction;
   direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
@@ -243,7 +232,7 @@ int main() {
     // delta time
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
-    lastFrame = currentFrame;  
+    lastFrame = currentFrame;
     //printf("delta: %f, last: %f\n", deltaTime, lastFrame);
 
     glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, 0.1f, 100.0f);
@@ -257,7 +246,7 @@ int main() {
     //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
     glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);
-    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f); 
+    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
     //glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
 
@@ -293,15 +282,42 @@ int main() {
     glBindTexture(GL_TEXTURE_2D, texture2);
 
     glBindVertexArray(vao);
-    for(unsigned int i = 0; i < 10; i++)
-    {
-      glm::mat4 model = glm::mat4(1.0f);
-      model = glm::translate(model, cubePositions[i]);
-      float angle = 20.0f * i; 
-      model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-      glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    //for(unsigned int i = 0; i < 10; i++)
+    //{
+      //glm::mat4 model = glm::mat4(1.0f);
+      //model = glm::translate(model, cubePositions[i]);
+      //float angle = 20.0f * i;
+      //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+      //glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
+      //glDrawArrays(GL_TRIANGLES, 0, 36);
+    //}
+
+    for(int i = 0; i < 16; i++) {
+      glm::mat4 model = glm::mat4(1.0f);
+      glm::vec3 cube_position = glm::vec3(0.0f, 0.0f, (float)i);
+      model = glm::translate(model, cube_position);
+
+      glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
       glDrawArrays(GL_TRIANGLES, 0, 36);
+
+      for(int j = 0; j < 16; j++) {
+        glm::mat4 model = glm::mat4(1.0f);
+        glm::vec3 cube_position = glm::vec3(0.0f, (float)j, (float)i);
+        model = glm::translate(model, cube_position);
+
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        for(int l = 0; l < 16; l++) {
+          glm::mat4 model = glm::mat4(1.0f);
+          glm::vec3 cube_position = glm::vec3((float)l, (float)j, (float)i);
+          model = glm::translate(model, cube_position);
+
+          glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+          glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+      }
     }
 
     // Unbind VAO
@@ -376,7 +392,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
   yoffset *= sensitivity;
 
   yaw   += xoffset;
-  pitch += yoffset;  
+  pitch += yoffset;
 
   if(pitch > 89.0f)
     pitch =  89.0f;
@@ -390,8 +406,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
   cameraFront = glm::normalize(direction);
 }
 
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
   printf("scroll\n");
     fov -= (float)yoffset;
     if (fov < 1.0f)

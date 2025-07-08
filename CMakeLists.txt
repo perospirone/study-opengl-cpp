@@ -32,7 +32,7 @@ file(GLOB IMAGE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/assets/*.jpg" "${CMAKE_CURREN
 file(COPY ${IMAGE_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # Add executable
-add_executable(main main.cpp src/glad.c shader_s.h)
+add_executable(main main.cpp glad/glad.c shader_s.h)
 
 # Link libraries
 target_link_libraries(main glfw GLEW::GLEW OpenGL::GL glm::glm)
