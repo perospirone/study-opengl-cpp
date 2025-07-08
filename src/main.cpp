@@ -4,6 +4,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp> // For glm::value_ptr
+#include <imgui.h>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_opengl3.h>
+#include <thread>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
@@ -20,6 +24,11 @@ void process_input(GLFWwindow *window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
+void initImGui(GLFWwindow* window);
+void renderImGui(GLFWwindow* window);
+void shutdownImGui();
+
+
 // settings
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
@@ -30,6 +39,8 @@ float lastFrame = 0.0f;
 Camera camera(glm::vec3(0.0f, 20.0f, 20.0f));
 float lastX = 400, lastY = 300;
 bool firstMouse = true;
+
+static bool vsync = true;
 
 int main() {
   if (!glfwInit()) {
@@ -56,6 +67,9 @@ int main() {
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
   glEnable(GL_DEPTH_TEST);
+
+  // Initialize ImGui
+  initImGui(window);
 
   float vertices[] = {
     -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
@@ -197,6 +211,11 @@ int main() {
   glfwSetScrollCallback(window, scroll_callback);
 
   while (!glfwWindowShouldClose(window)) {
+    // Start new ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
     // delta time
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
@@ -270,7 +289,17 @@ int main() {
     // Unbind VAO
     glBindVertexArray(0);
 
+    // render fps counter
+    renderImGui(window);
+
     glfwSwapBuffers(window);
+    // if (!vsync) {
+    //     const double targetFrameTime = 1.0 / 60.0;
+    //     double remaining = targetFrameTime - (glfwGetTime() - currentFrame);
+    //     if (remaining > 0) {
+    //         std::this_thread::sleep_for(std::chrono::duration<double>(remaining));
+    //     }
+    // }
     glfwPollEvents();
   }
 
@@ -278,6 +307,7 @@ int main() {
   glDeleteVertexArrays(1, &vao);
   glDeleteBuffers(1, &vbo);
   glDeleteBuffers(1, &ebo);
+  shutdownImGui();
 
   glfwTerminate();
   return 0;
@@ -287,7 +317,6 @@ int main() {
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
 }
-
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 void process_input(GLFWwindow *window) {
@@ -299,8 +328,6 @@ void process_input(GLFWwindow *window) {
     printf("press r\n");
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
   }
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    glfwSetWindowShouldClose(window, true);
 
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     camera.ProcessKeyboard(FORWARD, deltaTime);
@@ -314,6 +341,18 @@ void process_input(GLFWwindow *window) {
     camera.ProcessKeyboard(UP, deltaTime);
   if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
     camera.ProcessKeyboard(DOWN, deltaTime);
+
+  static bool vsyncKeyPressed = false;
+    if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
+        if (!vsyncKeyPressed) {
+            // Toggle VSync
+            vsync = !vsync;
+            glfwSwapInterval(vsync ? 1 : 0);
+            vsyncKeyPressed = true;
+        }
+    } else {
+        vsyncKeyPressed = false;
+    }
 }
 
 // glfw: whenever the mouse moves, this callback is called
@@ -342,4 +381,85 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
 // ----------------------------------------------------------------------
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
   camera.ProcessMouseScroll(static_cast<float>(yoffset));
+}
+
+// Initialize ImGui context
+void initImGui(GLFWwindow* window) {
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+}
+
+// Render ImGui components
+void renderImGui(GLFWwindow* window) {
+    // Handle input capture
+    ImGuiIO& io = ImGui::GetIO();
+    bool imguiWantsInput = io.WantCaptureMouse || io.WantCaptureKeyboard;
+    glfwSetInputMode(window, GLFW_CURSOR,
+        imguiWantsInput ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+
+    // FPS history data
+    static float fpsValues[100] = {};
+    static int fpsOffset = 0;
+    static float refreshTime = 0.0f;
+
+    // Update FPS history every 0.1 seconds
+    if (refreshTime == 0.0f) refreshTime = ImGui::GetTime();
+    while (refreshTime < ImGui::GetTime()) {
+        fpsValues[fpsOffset] = ImGui::GetIO().Framerate;
+        fpsOffset = (fpsOffset + 1) % IM_ARRAYSIZE(fpsValues);
+        refreshTime += 0.1f;
+    }
+
+    // Create performance window
+    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Performance Metrics", nullptr,
+        ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags_AlwaysAutoResize);
+
+    // Current FPS
+    ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+    ImGui::Text("Frame: %.3f ms", 1000.0f / ImGui::GetIO().Framerate);
+
+    // FPS history plot
+    float avgFps = 0.0f;
+    for (int i = 0; i < IM_ARRAYSIZE(fpsValues); i++) {
+        avgFps += fpsValues[i];
+    }
+    avgFps /= IM_ARRAYSIZE(fpsValues);
+
+    char overlay[32];
+    snprintf(overlay, 32, "Avg: %.1f", avgFps);
+    ImGui::PlotLines("FPS History", fpsValues, IM_ARRAYSIZE(fpsValues),
+        fpsOffset, overlay, 0.0f, 200.0f, ImVec2(200, 60));
+
+    // VSync control
+    if (ImGui::Checkbox("VSync", &vsync)) {
+        glfwSwapInterval(vsync ? 1 : 0);
+    }
+
+    // Camera position
+    ImGui::Text("Camera: (%.1f, %.1f, %.1f)",
+        camera.Position.x, camera.Position.y, camera.Position.z);
+
+    ImGui::End();
+
+    // Render ImGui
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+// Cleanup ImGui resources
+void shutdownImGui() {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 }

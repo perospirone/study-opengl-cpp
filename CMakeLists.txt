@@ -19,20 +19,43 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Include GLAD headers
 include_directories(include)
 
+add_subdirectory(${CMAKE_SOURCE_DIR}/third_party)
+
 # Find required packages (GLFW, GLEW, OpenGL)
 find_package(glfw3 REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
 
-configure_file(${CMAKE_SOURCE_DIR}/vertex.glsl ${CMAKE_BINARY_DIR}/vertex.glsl COPYONLY)
-configure_file(${CMAKE_SOURCE_DIR}/fragment.glsl ${CMAKE_BINARY_DIR}/fragment.glsl COPYONLY)
+# copy shaders
+configure_file(${CMAKE_SOURCE_DIR}/src/vertex.glsl ${CMAKE_BINARY_DIR}/vertex.glsl COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/src/fragment.glsl ${CMAKE_BINARY_DIR}/fragment.glsl COPYONLY)
 
+# copy images/textures
 file(GLOB IMAGE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/assets/*.jpg" "${CMAKE_CURRENT_SOURCE_DIR}/assets/*.png")
 file(COPY ${IMAGE_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # Add executable
-add_executable(main main.cpp glad/glad.c shader_s.h)
+add_executable(main src/main.cpp third_party/glad/glad.c src/shader_s.h src/camera.h)
+
+target_sources(main PRIVATE
+    third_party/imgui/imgui.cpp
+    third_party/imgui/imgui_demo.cpp
+    third_party/imgui/imgui_draw.cpp
+    third_party/imgui/imgui_tables.cpp
+    third_party/imgui/imgui_widgets.cpp
+    third_party/imgui/backends/imgui_impl_glfw.cpp
+    third_party/imgui/backends/imgui_impl_opengl3.cpp
+)
+
+
 
 # Link libraries
-target_link_libraries(main glfw GLEW::GLEW OpenGL::GL glm::glm)
+target_link_libraries(main glfw OpenGL::GL glm::glm imgui)
+
+# target_include_directories(main PRIVATE
+#     ${CMAKE_SOURCE_DIR}/include
+#     ${CMAKE_SOURCE_DIR}/third_party/glad/include
+#     ${CMAKE_SOURCE_DIR}/third_party/imgui
+#     ${CMAKE_SOURCE_DIR}/third_party/imgui/backends
+# )
