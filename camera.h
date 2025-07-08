@@ -1,3 +1,5 @@
+// i will rewrite this file
+
 #ifndef CAMERA_H
 #define CAMERA_H
 
