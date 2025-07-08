@@ -209,6 +209,11 @@ int main() {
   glfwSetCursorPosCallback(window, mouse_callback);
   glfwSetScrollCallback(window, scroll_callback);
 
+  // defining some things that i don't remember the name here, i think the name is "uniform"
+  int modelLoc = glGetUniformLocation(ourShader.ID, "model");
+  int projLoc = glGetUniformLocation(ourShader.ID, "projection");
+  int viewLoc = glGetUniformLocation(ourShader.ID, "view");
+
   while (!glfwWindowShouldClose(window)) {
     // start new ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
@@ -230,13 +235,8 @@ int main() {
     glm::mat4 view;
     view = camera.GetViewMatrix();
 
-    int modelLoc = glGetUniformLocation(ourShader.ID, "model");
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-    int projLoc = glGetUniformLocation(ourShader.ID, "projection");
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
-
-    int viewLoc = glGetUniformLocation(ourShader.ID, "view");
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
