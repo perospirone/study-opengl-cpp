@@ -3,11 +3,10 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp> // For glm::value_ptr
+#include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
-#include <thread>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
@@ -24,6 +23,7 @@ void process_input(GLFWwindow *window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
+// imgui functions
 void initImGui(GLFWwindow* window);
 void renderImGui(GLFWwindow* window);
 void shutdownImGui();
@@ -37,7 +37,7 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 Camera camera(glm::vec3(0.0f, 20.0f, 20.0f));
-float lastX = 400, lastY = 300;
+float lastX = SCR_WIDTH / 2.0f, lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
 static bool vsync = true;
@@ -60,6 +60,7 @@ int main() {
   glfwMakeContextCurrent(window);
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    std::cerr << "Failed to initialize GLAD" << std::endl;
     return -1;
   }
 
@@ -68,7 +69,7 @@ int main() {
 
   glEnable(GL_DEPTH_TEST);
 
-  // Initialize ImGui
+  // initialize ImGui
   initImGui(window);
 
   float vertices[] = {
@@ -115,6 +116,17 @@ int main() {
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
   };
 
+  int width, height, nrChannels;
+  stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
+
+  unsigned char *data = stbi_load("./container.jpg", &width, &height, &nrChannels, 0);
+  if (width == 0 || height == 0) {
+      std::cerr << "Invalid texture dimensions" << std::endl;
+  }
+  unsigned int texture1, texture2;
+
+  glGenTextures(1, &texture1);
+  glBindTexture(GL_TEXTURE_2D, texture1);
   // texture config
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
@@ -128,15 +140,6 @@ int main() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  int width, height, nrChannels;
-  stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-
-  unsigned char *data = stbi_load("./container.jpg", &width, &height, &nrChannels, 0);
-
-  unsigned int texture1, texture2;
-
-  glGenTextures(1, &texture1);
-  glBindTexture(GL_TEXTURE_2D, texture1);
   if (data) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -157,6 +160,9 @@ int main() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   // load image, create texture and generate mipmaps
   data = stbi_load("./awesomeface.png", &width, &height, &nrChannels, 0);
+  if (width == 0 || height == 0) {
+      std::cerr << "Invalid texture dimensions" << std::endl;
+  }
   if (data) {
     // note that the awesomeface.png has transparency and thus an alpha channel,
     // so make sure to tell OpenGL the data type is of GL_RGBA
@@ -168,24 +174,18 @@ int main() {
   }
   stbi_image_free(data);
 
-  unsigned int vao, vbo, ebo;
+  unsigned int vao, vbo;
 
   glGenVertexArrays(1, &vao);
   glGenBuffers(1, &vbo);
-  glGenBuffers(1, &ebo);
 
-  // Bind the VAO first, then bind and set VBO(s) and EBO, and configure vertex
+  // Bind the VAO first, then bind and set VBO(s) and configure vertex
   // attributes
   glBindVertexArray(vao);
 
   // Bind VBO and load vertex data
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-  // Bind EBO and load index data
-  //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-  //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
-               //GL_STATIC_DRAW);
 
   // position attribute (3 floats)
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
@@ -198,7 +198,6 @@ int main() {
   glBindVertexArray(0);
 
   Shader ourShader("vertex.glsl", "fragment.glsl");
-
   ourShader.use(); // don't forget to activate/use the shader before setting
                    // uniforms!
   // either set it manually like so:
@@ -211,27 +210,23 @@ int main() {
   glfwSetScrollCallback(window, scroll_callback);
 
   while (!glfwWindowShouldClose(window)) {
-    // Start new ImGui frame
+    // start new ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
     // delta time
-    float currentFrame = glfwGetTime();
+    double currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
     //printf("delta: %f, last: %f\n", deltaTime, lastFrame);
 
     // glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, 0.1f, 100.0f); idk what is this?
 
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f); // zoom, aspect ratio TODO: test what happens if i change some arguments here
 
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
 
-    const float radius = 10.0f;
-    float camX = sin(glfwGetTime()) * radius;
-    float camZ = cos(glfwGetTime()) * radius;
     glm::mat4 view;
     view = camera.GetViewMatrix();
 
@@ -304,9 +299,12 @@ int main() {
   }
 
   // Cleanup
+  glDeleteTextures(1, &texture1);
+  glDeleteTextures(1, &texture2);
+
   glDeleteVertexArrays(1, &vao);
   glDeleteBuffers(1, &vbo);
-  glDeleteBuffers(1, &ebo);
+
   shutdownImGui();
 
   glfwTerminate();
