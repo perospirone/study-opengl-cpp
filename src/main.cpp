@@ -15,8 +15,8 @@
 #include <iostream>
 #include <vector>
 
-#include "shader_s.h"
-#include "camera.h"
+#include "shader/shader.h"
+#include "camera/camera.h"
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void process_input(GLFWwindow *window);
@@ -231,7 +231,7 @@ int main() {
   // Unbind the VAO
   glBindVertexArray(0);
 
-  Shader shader("vertex.glsl", "fragment.glsl");
+  Shader shader("./shaders/vertex.glsl", "./shaders/fragment.glsl");
   shader.use(); // don't forget to activate/use the shader before setting
                    // uniforms!
   // either set it manually like so:
@@ -247,8 +247,6 @@ int main() {
   int modelLoc = glGetUniformLocation(shader.ID, "model");
   int projLoc = glGetUniformLocation(shader.ID, "projection");
   int viewLoc = glGetUniformLocation(shader.ID, "view");
-
-  Chunk chunk;
 
   while (!glfwWindowShouldClose(window)) {
     // start new ImGui frame

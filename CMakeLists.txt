@@ -27,15 +27,30 @@ find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
 
 # copy shaders
-configure_file(${CMAKE_SOURCE_DIR}/src/vertex.glsl ${CMAKE_BINARY_DIR}/vertex.glsl COPYONLY)
-configure_file(${CMAKE_SOURCE_DIR}/src/fragment.glsl ${CMAKE_BINARY_DIR}/fragment.glsl COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/src/shaders/vertex.glsl ${CMAKE_BINARY_DIR}/shaders/vertex.glsl COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/src/shaders/fragment.glsl ${CMAKE_BINARY_DIR}/shaders/fragment.glsl COPYONLY)
 
 # copy images/textures
 file(GLOB IMAGE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/assets/*.jpg" "${CMAKE_CURRENT_SOURCE_DIR}/assets/*.png" "${CMAKE_CURRENT_SOURCE_DIR}/assets/*.jpeg")
 file(COPY ${IMAGE_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
+# include project headers
+include_directories(src)
+
+# automatically find all source files
+file(GLOB_RECURSE SOURCES
+    "src/*.cpp"
+)
+
+# automatically find all header directories
+file(GLOB_RECURSE HEADER_DIRS 
+    LIST_DIRECTORIES true 
+    "src/*.h" 
+    "src/*.hpp"
+)
+
 # Add executable
-add_executable(main src/main.cpp third_party/glad/glad.c src/shader_s.h src/camera.h)
+add_executable(main ${SOURCES} ${HEADER_DIRS} third_party/glad/glad.c)
 
 target_sources(main PRIVATE
     third_party/imgui/imgui.cpp
@@ -51,10 +66,3 @@ target_sources(main PRIVATE
 
 # Link libraries
 target_link_libraries(main glfw OpenGL::GL glm::glm imgui)
-
-# target_include_directories(main PRIVATE
-#     ${CMAKE_SOURCE_DIR}/include
-#     ${CMAKE_SOURCE_DIR}/third_party/glad/include
-#     ${CMAKE_SOURCE_DIR}/third_party/imgui
-#     ${CMAKE_SOURCE_DIR}/third_party/imgui/backends
-# )
