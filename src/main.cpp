@@ -41,41 +41,6 @@ bool firstMouse = true;
 
 static bool vsync = true;
 
-class Chunk {
-  public:
-    const static int CHUNK_WIDTH = 16;
-    const static int CHUNK_HEIGHT = 16;
-    const static int CHUNK_DEPTH = 16;
-
-    unsigned char blocks[CHUNK_WIDTH][CHUNK_HEIGHT][CHUNK_DEPTH];
-
-    unsigned int vao, vbo;
-    std::vector<float> mesh_vertices;
-
-    Chunk() {
-      // Initialize all blocks to 0
-      for (int x = 0; x < CHUNK_WIDTH; ++x) {
-        for (int y = 0; y < CHUNK_HEIGHT; ++y) {
-          for (int z = 0; z < CHUNK_DEPTH; ++z) {
-            blocks[x][y][z] = 0;
-          }
-        }
-      }
-
-      for (int x = 0; x <= 8; ++x) {
-        for (int y = 0; y <= 8; ++y) {
-          for (int z = 0; z <= 8; ++z) {
-            blocks[x][y][z] = 1;
-          }
-        }
-      }
-    }
-
-    void GenerateMesh();
-    void Draw();
-
-};
-
 int main() {
   if (!glfwInit()) {
     return -1;
