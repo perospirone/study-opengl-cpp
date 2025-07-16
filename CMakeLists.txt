@@ -31,7 +31,7 @@ configure_file(${CMAKE_SOURCE_DIR}/src/vertex.glsl ${CMAKE_BINARY_DIR}/vertex.gl
 configure_file(${CMAKE_SOURCE_DIR}/src/fragment.glsl ${CMAKE_BINARY_DIR}/fragment.glsl COPYONLY)
 
 # copy images/textures
-file(GLOB IMAGE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/assets/*.jpg" "${CMAKE_CURRENT_SOURCE_DIR}/assets/*.png")
+file(GLOB IMAGE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/assets/*.jpg" "${CMAKE_CURRENT_SOURCE_DIR}/assets/*.png" "${CMAKE_CURRENT_SOURCE_DIR}/assets/*.jpeg")
 file(COPY ${IMAGE_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # Add executable

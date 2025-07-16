@@ -11,9 +11,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
-#include <cmath>
 #include <cstdio>
 #include <iostream>
+#include <vector>
 
 #include "shader_s.h"
 #include "camera.h"
@@ -28,7 +28,6 @@ void initImGui(GLFWwindow* window);
 void renderImGui(GLFWwindow* window);
 void shutdownImGui();
 
-
 // settings
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
@@ -41,6 +40,41 @@ float lastX = SCR_WIDTH / 2.0f, lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
 static bool vsync = true;
+
+class Chunk {
+  public:
+    const static int CHUNK_WIDTH = 16;
+    const static int CHUNK_HEIGHT = 16;
+    const static int CHUNK_DEPTH = 16;
+
+    unsigned char blocks[CHUNK_WIDTH][CHUNK_HEIGHT][CHUNK_DEPTH];
+
+    unsigned int vao, vbo;
+    std::vector<float> mesh_vertices;
+
+    Chunk() {
+      // Initialize all blocks to 0
+      for (int x = 0; x < CHUNK_WIDTH; ++x) {
+        for (int y = 0; y < CHUNK_HEIGHT; ++y) {
+          for (int z = 0; z < CHUNK_DEPTH; ++z) {
+            blocks[x][y][z] = 0;
+          }
+        }
+      }
+
+      for (int x = 0; x <= 8; ++x) {
+        for (int y = 0; y <= 8; ++y) {
+          for (int z = 0; z <= 8; ++z) {
+            blocks[x][y][z] = 1;
+          }
+        }
+      }
+    }
+
+    void GenerateMesh();
+    void Draw();
+
+};
 
 int main() {
   if (!glfwInit()) {
@@ -119,7 +153,7 @@ int main() {
   int width, height, nrChannels;
   stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
 
-  unsigned char *data = stbi_load("./container.jpg", &width, &height, &nrChannels, 0);
+  unsigned char *data = stbi_load("./b.jpeg", &width, &height, &nrChannels, 0);
   if (width == 0 || height == 0) {
       std::cerr << "Invalid texture dimensions" << std::endl;
   }
@@ -197,22 +231,24 @@ int main() {
   // Unbind the VAO
   glBindVertexArray(0);
 
-  Shader ourShader("vertex.glsl", "fragment.glsl");
-  ourShader.use(); // don't forget to activate/use the shader before setting
+  Shader shader("vertex.glsl", "fragment.glsl");
+  shader.use(); // don't forget to activate/use the shader before setting
                    // uniforms!
   // either set it manually like so:
-  glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0);
+  glUniform1i(glGetUniformLocation(shader.ID, "texture1"), 0);
   // or set it via the texture class
-  ourShader.setInt("texture2", 1);
+  // ourShader.setInt("texture2", 1); disabling the second texture for now
 
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPosCallback(window, mouse_callback);
   glfwSetScrollCallback(window, scroll_callback);
 
   // defining some things that i don't remember the name here, i think the name is "uniform"
-  int modelLoc = glGetUniformLocation(ourShader.ID, "model");
-  int projLoc = glGetUniformLocation(ourShader.ID, "projection");
-  int viewLoc = glGetUniformLocation(ourShader.ID, "view");
+  int modelLoc = glGetUniformLocation(shader.ID, "model");
+  int projLoc = glGetUniformLocation(shader.ID, "projection");
+  int viewLoc = glGetUniformLocation(shader.ID, "view");
+
+  Chunk chunk;
 
   while (!glfwWindowShouldClose(window)) {
     // start new ImGui frame
@@ -227,7 +263,6 @@ int main() {
 
     int screen_width, screen_height;
     glfwGetWindowSize(window, &width, &height);
-    printf("window size width: %d, height: %d\n", width, height);
 
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)width/height, 0.1f, 100.0f); // zoom, aspect ratio TODO: test what happens if i change some arguments here
     glm::mat4 model = glm::mat4(1.0f);
@@ -241,7 +276,7 @@ int main() {
     process_input(window);
 
     // Activate shader
-    ourShader.use();
+    shader.use();
 
     // Bind texture
     // bind textures on corresponding texture units
