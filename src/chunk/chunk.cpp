@@ -4,7 +4,7 @@ const int Chunk::WIDTH;
 const int Chunk::HEIGHT;
 const int Chunk::DEPTH;
 
-unsigned char Chunk::blocks[Chunk::WIDTH][Chunk::HEIGHT][Chunk::DEPTH];  // Correct definition
+unsigned char Chunk::blocks[Chunk::WIDTH][Chunk::HEIGHT][Chunk::DEPTH];
 
 Chunk::Chunk() {
       // Initialize all blocks to 0
